@@ -18,38 +18,41 @@ const getSortedCards = createSelector(getCards, cards =>
 )
  */
 export class CamperList extends Component{
-  state = {campers:[]}
+  state = {campers:[], sortBy: 'username', ascending: 1}
+
   async componentDidMount(){
     const promis = await fetch('https://fcctop100.herokuapp.com/api/fccusers/top/recent')//fetch is normally async
     const myResults = await promis.json()
-    myResults.sort(function compare(card1, card2){
-      if (card1.alltime < card2.alltime) {
-        return 1
-      }
-      if (card1.alltime > card2.alltime) {
-        return -1
-      }
-      // a must be equal to b
-      return 0
-    }).reverse().reverse()
     this.setState({campers:myResults})
     console.log(myResults);
   }
+
+  sortHeader = (sortBy) => {
+    if(sortBy == this.state.sortBy){
+      this.setState({ascending: this.state.ascending * -1})
+    }
+    else {
+      this.setState({ascending: 1, sortBy})
+    }
+  }
+
   render(){
-    const {campers} = this.state
+    const {campers, sortBy, ascending} = this.state
+
 
     return(
       <Table basic='very' celled collapsing>
         <Table.Header>
           <Table.Row>
-            <Table.HeaderCell>Employee</Table.HeaderCell>
-            <Table.HeaderCell>Correct Guesses</Table.HeaderCell>
-            <Table.HeaderCell>FooBar</Table.HeaderCell>
+            <Table.HeaderCell onClick = {() => this.sortHeader('username')}>Employee</Table.HeaderCell>
+            <Table.HeaderCell onClick = {() => this.sortHeader('alltime')}>Correct Guesses</Table.HeaderCell>
           </Table.Row>
         </Table.Header>
 
         <Table.Body>
-          {campers.map((campers) => {
+          {campers.sort((camperA, camperB) => {
+            return (camperA[sortBy] < camperB[sortBy] ? -1 : 1) * ascending
+          }).map((campers) => {
               return <Table.Row key={campers.username}>
                 <Table.Cell>
                   <Header as='h4' image>
